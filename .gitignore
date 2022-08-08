@@ -1,0 +1,10 @@
+# Project exclude paths
+/admin/target/
+/auth-server/target/
+/common/target/
+/gateway/target/
+/member/target/
+/product/target/
+/search/target/
+/third-party/target/
+/ware/target/

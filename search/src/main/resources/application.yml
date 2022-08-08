@@ -1,0 +1,17 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: search
+
+  mvc:
+    static-path-pattern: /static/**
+  resources:
+    static-locations: classpath:/static/
+
+server:
+  port: 7070
+
+ribbon:
+  ReadTimeout: 20000
+  ConnectTimeout: 20000

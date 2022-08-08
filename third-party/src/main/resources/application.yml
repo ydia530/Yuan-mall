@@ -1,0 +1,16 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: third-party
+  redis:
+    port: 6379
+    host: 81.70.10.9
+server:
+  port: 30000
+
+sms-code:
+  appcode: b4ab774a24a14de098cf3cd764bea7e1
+  path: /sms/smsSend
+  method: POST
+  host: https://gyytz.market.alicloudapi.com

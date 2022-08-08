@@ -1,0 +1,31 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: auth-server
+  redis:
+    port: 6379
+    host: 81.70.10.9
+
+  mvc:
+    static-path-pattern: /static/**
+  resources:
+    static-locations: classpath:/static/
+  session:
+    store-type: redis
+
+
+server:
+  port: 7777
+
+
+wx:
+  app-id: wx1786b08122db76d8
+  app-secret: 1bd8aff8c05a431010a86a215d00ddc6
+  mch-id: 111111
+  mch-key: xxxxxx
+  notify-url: http://www.example.com/wx/order/pay-notify
+
+ribbon:
+  ReadTimeout: 20000
+  ConnectTimeout: 20000

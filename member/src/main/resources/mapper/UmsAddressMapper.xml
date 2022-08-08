@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuan.mall.member.mapper.UmsAddressMapper">
+
+    <resultMap id="BaseResultMap" type="com.yuan.mall.member.entity.UmsAddress">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="userId" column="user_id" jdbcType="INTEGER"/>
+            <result property="provinceCode" column="province_code" jdbcType="VARCHAR"/>
+            <result property="provinceName" column="province_name" jdbcType="VARCHAR"/>
+            <result property="countryCode" column="country_code" jdbcType="VARCHAR"/>
+            <result property="countryName" column="country_name" jdbcType="VARCHAR"/>
+            <result property="cityCode" column="city_code" jdbcType="VARCHAR"/>
+            <result property="cityName" column="city_name" jdbcType="VARCHAR"/>
+            <result property="districtCode" column="district_code" jdbcType="VARCHAR"/>
+            <result property="districtName" column="district_name" jdbcType="VARCHAR"/>
+            <result property="detailAddress" column="detail_address" jdbcType="VARCHAR"/>
+            <result property="phone" column="phone" jdbcType="VARCHAR"/>
+            <result property="isDefault" column="is_default" jdbcType="TINYINT"/>
+            <result property="addressTag" column="address_tag" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,user_id,
+        province_code,province_name,country_code,
+        country_name,city_code,city_name,
+        district_code,district_name,detail_address,
+        phone,is_default,address_tag,
+        create_time,update_time,is_deleted
+    </sql>
+</mapper>
