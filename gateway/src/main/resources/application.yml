@@ -1,7 +1,6 @@
 spring:
   profiles:
     active: dev
-
   cloud:
     gateway:
         routes:

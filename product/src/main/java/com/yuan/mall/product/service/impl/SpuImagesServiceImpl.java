@@ -48,4 +48,18 @@ public class SpuImagesServiceImpl extends ServiceImpl<SpuImagesDao, SpuImagesEnt
         }
     }
 
+    @Override
+    public List<String> getImagesBySpuId(Long id) {
+        if (id != null){
+            QueryWrapper<SpuImagesEntity> spuImagesEntityQueryWrapper = new QueryWrapper<>();
+            spuImagesEntityQueryWrapper.eq("spu_id", id);
+            List<SpuImagesEntity> spuImagesEntities = this.baseMapper.selectList(spuImagesEntityQueryWrapper);
+            List<String> images = spuImagesEntities.stream()
+                    .map(spuImagesEntity -> spuImagesEntity.getImgUrl()).collect(Collectors.toList());
+            return images;
+        }
+        return null;
+    }
+
+
 }

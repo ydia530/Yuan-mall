@@ -5,6 +5,7 @@ import com.yuan.common.utils.PageUtils;
 import com.yuan.mall.product.entity.SpuInfoDescEntity;
 import com.yuan.mall.product.entity.SpuInfoDescEntity;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,5 +20,7 @@ public interface SpuInfoDescService extends IService<SpuInfoDescEntity> {
     PageUtils queryPage(Map<String, Object> params);
 
     void saveSpuInfoDescription(SpuInfoDescEntity spuInfoDescEntity);
+
+    String getDescBySpuId(Long spuId);
 }
 

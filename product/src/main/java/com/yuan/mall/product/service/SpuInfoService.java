@@ -1,6 +1,7 @@
 package com.yuan.mall.product.service;
 
 import com.yuan.mall.product.VO.SpuSaveVo;
+import com.yuan.mall.product.VO.SpuVo;
 import com.yuan.mall.product.entity.SpuInfoDescEntity;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yuan.common.utils.PageUtils;
@@ -9,6 +10,7 @@ import com.yuan.mall.product.VO.SpuSaveVo;
 import com.yuan.mall.product.entity.SpuInfoEntity;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * spu信息
@@ -28,5 +30,7 @@ public interface SpuInfoService extends IService<SpuInfoEntity> {
     PageUtils queryPageByCondition(Map<String, Object> params);
 
     void up(Long spuId);
+
+    SpuVo getSpuItemInfo(Long spuId) throws ExecutionException, InterruptedException;
 }
 

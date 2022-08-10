@@ -4,3 +4,9 @@ spring:
       discovery:
         server-addr: 101.43.189.185:8848
         ip: 101.43.189.185
+
+server:
+  ssl:
+    key-store: classpath:yuanmall.top.jks
+    key-store-password: Diao0707
+    keyStoreType: JKS

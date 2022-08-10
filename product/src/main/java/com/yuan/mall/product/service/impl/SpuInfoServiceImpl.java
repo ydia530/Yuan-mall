@@ -17,6 +17,7 @@ import com.yuan.mall.product.entity.*;
 import com.yuan.mall.product.feign.CouponFeignService;
 import com.yuan.mall.product.feign.SearchFeignService;
 import com.yuan.mall.product.feign.WareFeignService;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +25,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -34,7 +38,6 @@ import com.yuan.common.utils.Query;
 import com.yuan.mall.product.dao.SpuInfoDao;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 
 @Service("spuInfoService")
@@ -75,6 +78,14 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
     @Autowired
     private SearchFeignService searchFeignService;
+
+    @Autowired
+    private AttrGroupService attrGroupService;
+
+
+    @Autowired
+    private ThreadPoolExecutor executor;
+
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -253,7 +264,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             List<SkuHasStockVo> hasStock = wareFeignService.getSkuHasStock(skuids);
             // 构造器受保护 所以写成内部类对象
             stockMap = hasStock.stream()
-                    .collect(Collectors.toMap(SkuHasStockVo::getSkuId, item -> item.getHasStock()));
+                    .collect(Collectors.toMap(SkuHasStockVo::getSkuId, item -> item.getHasStock() > 0));
             log.debug("服务调用成功" + hasStock);
         } catch (Exception e) {
             log.error("库存服务调用失败: 原因{}", e);
@@ -301,6 +312,137 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
              * 2.
              */
         }
+    }
+
+    @Override
+    public SpuVo getSpuItemInfo(Long spuId) throws ExecutionException, InterruptedException {
+        SpuVo spuVo = new SpuVo();
+
+        /** 1.获取Spu基本信息 **/
+        CompletableFuture<SpuInfoEntity> spuInfoFuture = CompletableFuture.supplyAsync(() -> {
+            SpuInfoEntity spuInfoEntity = baseMapper.selectById(spuId);
+            spuVo.setSpuId(spuInfoEntity.getId());
+            List<Long> categoryIds = new ArrayList<>();
+            categoryIds.add(spuInfoEntity.getBrandId());
+            spuVo.setCategoryIds(categoryIds);
+            spuVo.setIsPutOnSale(spuInfoEntity.getPublishStatus());
+            spuVo.setTitle(spuInfoEntity.getSpuName());
+            spuVo.setSkuList(new ArrayList<>());
+            return spuInfoEntity;
+        }, executor);
+
+        /** 2.获取Spu image **/
+        CompletableFuture<Void> imageFuture = CompletableFuture.runAsync(() -> {
+            List<String> images = spuImagesService.getImagesBySpuId(spuId);
+            spuVo.setImages(images);
+            if (!CollectionUtils.isEmpty(images)){
+                spuVo.setPrimaryImage(images.get(0));
+            }
+            String descString = spuInfoDescService.getDescBySpuId(spuId);
+            if (StringUtils.isNotBlank(descString)){
+                List<String> desc = Arrays.stream(descString.split(",")).collect(Collectors.toList());
+                spuVo.setDesc(desc);
+            }
+        }, executor);
+
+        /**3.组装 sku 信息 */
+        CompletableFuture<List<SkuVo>> skuItemFuture = CompletableFuture.supplyAsync(() -> {
+            List<SkuInfoEntity> skus = skuInfoService.getSkusBySpuId(spuId);
+            List<SkuVo> skuVos = skus.stream().map(skuInfoEntity -> {
+                SkuVo skuVo = new SkuVo();
+                skuVo.setSkuId(skuInfoEntity.getSkuId());
+                skuVo.setSkuImage(skuInfoEntity.getSkuDefaultImg());
+                skuVo.setPriceInfo(skuInfoEntity.getPrice());
+                return skuVo;
+            }).collect(Collectors.toList());
+            spuVo.setSoldNum(skus.stream().mapToLong(SkuInfoEntity::getSaleCount).sum());
+            spuVo.setSkuList(skuVos);
+
+            //获取最低价最高价
+            skus.stream()
+                    .max(Comparator.comparing(SkuInfoEntity::getPrice))
+                    .ifPresent(p ->{
+                        spuVo.setMaxLinePrice(p.getPrice());
+                        spuVo.setMaxSalePrice(p.getPrice());
+                    });
+
+            skus.stream()
+                    .min(Comparator.comparing(SkuInfoEntity::getPrice))
+                    .ifPresent(p ->{
+                        spuVo.setMinLinePrice(p.getPrice());
+                        spuVo.setMinSalePrice(p.getPrice());
+                    });
+            if (spuVo.getMaxLinePrice().equals(spuVo.getMinLinePrice())){
+                spuVo.setMaxLinePrice(spuVo.getMaxLinePrice().add(new BigDecimal(100)));
+            }
+            return skuVos;
+        }, executor);
+
+        //3 获取spu销售属性组合 list
+        CompletableFuture<Void> saleAttrFuture = skuItemFuture.thenAcceptAsync(res -> {
+            List<ItemSaleAttrVo> saleAttrVos = skuSaleAttrValueService.getSaleAttrsBuSpuId(spuId);
+            Map<Long, SkuVo> skuVoMap = res.stream().collect(Collectors.toMap(SkuVo::getSkuId, SkuVo -> SkuVo));
+            List<SpecItemVo> specItems = saleAttrVos.stream().map(saleAttrVo -> {
+                SpecItemVo specItemVo = new SpecItemVo();
+                specItemVo.setSpecId(saleAttrVo.getAttrId());
+                specItemVo.setTitle(saleAttrVo.getAttrName());
+
+                List<SpecValueVo> specValues = saleAttrVo.getAttrValues().stream().map(attr ->{
+                    SpecValueVo specValueVo = new SpecValueVo();
+                    specValueVo.setSpecId(saleAttrVo.getAttrId());
+                    specValueVo.setSpecValue(attr.getAttrValue());
+                    String s = UUID.randomUUID().toString();
+                    specValueVo.setSpecValueId(s);
+
+                    String[] skuId = attr.getSkuIds().split(",");
+                    for (String s1 : skuId) {
+                        SkuVo skuVo = skuVoMap.get(Long.valueOf(s1));
+
+                        SpecInfoVo specInfoVo = new SpecInfoVo();
+                        specInfoVo.setSpecId(saleAttrVo.getAttrId());
+                        specInfoVo.setSpecValueId(s);
+
+                        if (skuVo.getSpecInfo() == null ){
+                            ArrayList<SpecInfoVo> specInfoVos = new ArrayList<>();
+                            specInfoVos.add(specInfoVo);
+                            skuVo.setSpecInfo(specInfoVos);
+                        } else {
+                         skuVo.getSpecInfo().add(specInfoVo);
+                        }
+                    }
+                    return specValueVo;
+                }).collect(Collectors.toList());
+
+                specItemVo.setSpecValueList(specValues);
+                return specItemVo;
+            }).collect(Collectors.toList());
+            spuVo.setSpecList(specItems);
+        }, executor);
+
+
+        CompletableFuture<Void> stockFuture =  skuItemFuture.thenAcceptAsync(res -> {
+            Map<Long, SkuVo> skuVoMap = res.stream().collect(Collectors.toMap(SkuVo::getSkuId, sku -> sku));
+            try {
+                // 远程调用库存系统 查询该sku是否有库存
+                List<SkuHasStockVo> hasStock = wareFeignService.getSkuHasStock(new ArrayList<>(skuVoMap.keySet()));
+                log.debug("服务调用成功" + hasStock);
+                hasStock.stream().forEach(skuHasStockVo -> {
+                    SkuVo skuVo = skuVoMap.get(skuHasStockVo.getSkuId());
+                    if (skuVo != null){
+                        skuVo.setStockQuantity(skuHasStockVo.getHasStock());
+                        spuVo.setSpuStockQuantity(
+                                spuVo.getSpuStockQuantity() == null ?
+                                        0: spuVo.getSpuStockQuantity() + skuHasStockVo.getHasStock());
+                    }
+                });
+
+            } catch (Exception e) {
+                log.error("库存服务调用失败: 原因{}", e);
+            }
+        }, executor);
+
+        CompletableFuture.allOf(spuInfoFuture, imageFuture, skuItemFuture, saleAttrFuture, stockFuture).get();
+        return spuVo;
     }
 
 
