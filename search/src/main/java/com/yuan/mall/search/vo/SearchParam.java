@@ -20,7 +20,7 @@ public class SearchParam {
     /**
      * 三级分类id
      */
-    private Long catalog3Id;
+    private Long category;
 
     private String sort;
 

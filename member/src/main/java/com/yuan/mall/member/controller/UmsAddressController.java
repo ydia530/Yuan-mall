@@ -29,7 +29,7 @@ public class UmsAddressController {
     }
 
     @GetMapping("/detail")
-    public Object detail(@LoginUser Integer userId, @RequestParam Integer id){
+    public R detail(@LoginUser Integer userId, @RequestParam Integer id){
         if(userId == null) {
             return R.unLogin();
         }
@@ -53,6 +53,7 @@ public class UmsAddressController {
         }
         return addressService.deleteAddress(userId, id);
     }
+
 
 
 }

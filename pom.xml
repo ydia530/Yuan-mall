@@ -20,6 +20,8 @@
         <module>search</module>
         <module>third-party</module>
         <module>ware</module>
+        <module>cart</module>
+        <module>order</module>
     </modules>
 
 

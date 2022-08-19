@@ -3,6 +3,7 @@ package com.yuan.mall.ware.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yuan.common.utils.PageUtils;
 import com.yuan.mall.ware.entity.WareInfoEntity;
+import com.yuan.mall.ware.vo.FareVo;
 
 import java.util.Map;
 
@@ -16,5 +17,6 @@ import java.util.Map;
 public interface WareInfoService extends IService<WareInfoEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
 }
 

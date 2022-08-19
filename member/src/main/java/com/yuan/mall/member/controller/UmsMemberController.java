@@ -1,6 +1,7 @@
 package com.yuan.mall.member.controller;
 
 import com.yuan.common.to.UserInfoDto;
+import com.yuan.common.utils.PageUtils;
 import com.yuan.common.utils.R;
 import com.yuan.common.vo.MemberRespVo;
 import com.yuan.mall.member.annotation.LoginUser;
@@ -11,8 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -122,59 +122,85 @@ public class UmsMemberController {
         return Pattern.matches(regex, phoneNumber);
     }
 
-//
-//
-//    /**
-//     * 列表
-//     */
-//    @RequestMapping("/list")
-//    public R list(@RequestParam Map<String, Object> params){
-//        PageUtils page = memberService.queryPage(params);
-//
-//        return R.ok().put("page", page);
-//    }
-//
-//
-//    /**
-//     * 信息
-//     */
-//    @RequestMapping("/info/{id}")
-//    public R info(@PathVariable("id") Long id){
-//		MemberEntity member = memberService.getById(id);
-//
-//        return R.ok().put("member", member);
-//    }
-//
-//    /**
-//     * 保存
-//     */
-//    @RequestMapping("/save")
-//    public R save(@RequestBody MemberEntity member){
-//		memberService.save(member);
-//
-//        return R.ok();
-//    }
-//
-////    /**
-////     * 修改
-////     */
-////    @RequestMapping("/update")
-////    public R update(@RequestBody MemberEntity member){
-////		memberService.updateById(member);
-////
-////        return R.ok();
-////    }
-//
-//    /**
-//     * 删除
-//     */
-//    @RequestMapping("/delete")
-//    public R delete(@RequestBody Long[] ids){
-//		memberService.removeByIds(Arrays.asList(ids));
-//
-//        return R.ok();
-//    }
 
 
+    /**
+     * 列表
+     */
+    @RequestMapping("/list")
+    public R list(@RequestParam Map<String, Object> params){
+        PageUtils page = memberService.queryPage(params);
+
+        return R.ok().put("page", page);
+    }
+
+
+    /**
+     * 信息
+     */
+    @RequestMapping("/info/{id}")
+    public R info(@PathVariable("id") Long id){
+        UmsMember member = memberService.getById(id);
+
+        return R.ok().put("member", member);
+    }
+
+    /**
+     * 保存
+     */
+    @RequestMapping("/save")
+    public R save(@RequestBody UmsMember member){
+		memberService.save(member);
+
+        return R.ok();
+    }
+
+    /**
+     * 修改
+     */
+    @RequestMapping("/update")
+    public R update(@RequestBody UmsMember member){
+		memberService.updateById(member);
+
+        return R.ok();
+    }
+
+    /**
+     * 删除
+     */
+    @RequestMapping("/delete")
+    public R delete(@RequestBody Long[] ids){
+		memberService.removeByIds(Arrays.asList(ids));
+
+        return R.ok();
+    }
+
+
+    @GetMapping("/search_history/add")
+    public R addSearchHistory(@LoginUser Integer userId,  @RequestParam String search){
+        if (userId != null){
+            memberService.addSearchHistory(userId, search);
+            return R.ok();
+        }
+        return R.unLogin();
+    }
+
+    @GetMapping("/search_history/delete")
+    public R deleteSearchHistory(@LoginUser Integer userId){
+        if (userId != null){
+            memberService.deleteSearchHistory(userId);
+            return R.ok();
+        }
+        return R.unLogin();
+    }
+
+    @GetMapping("/search_history")
+    public R getSearchHistory(@LoginUser Integer userId){
+        if (userId != null){
+            Set<String> history = memberService.getSearchHistory(userId);
+            return R.ok().put("data", history);
+        }
+        return R.unLogin();
+    }
 
 }

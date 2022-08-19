@@ -1,17 +1,25 @@
 package com.yuan.mall.member.services.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yuan.common.to.UserInfoDto;
+import com.yuan.common.utils.PageUtils;
+import com.yuan.common.utils.Query;
 import com.yuan.common.utils.UserTokenManager;
 import com.yuan.common.vo.MemberRespVo;
 import com.yuan.common.vo.UserInfoVo;
 import com.yuan.mall.member.entity.UmsMember;
 import com.yuan.mall.member.services.UmsMemberService;
 import com.yuan.mall.member.mapper.UmsMemberMapper;
+import com.yuan.mall.member.utlis.SearchRedisHelper;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
 * @author diaoyuan
@@ -21,6 +29,9 @@ import java.time.LocalDateTime;
 @Service
 public class UmsMemberServiceImpl extends ServiceImpl<UmsMemberMapper, UmsMember>
     implements UmsMemberService{
+
+    @Resource
+    private SearchRedisHelper redisHelper;
 
     @Override
     public MemberRespVo login(UserInfoDto userInfoDto) {
@@ -81,6 +92,32 @@ public class UmsMemberServiceImpl extends ServiceImpl<UmsMemberMapper, UmsMember
         user.setId(userId);
         user.setMobile(mobile);
         return this.updateById(user);
+    }
+
+    @Override
+    public PageUtils queryPage(Map<String, Object> params) {
+        IPage<UmsMember> page = this.page(
+                new Query<UmsMember>().getPage(params),
+                new QueryWrapper<UmsMember>()
+        );
+        return new PageUtils(page);
+    }
+
+    @Override
+    public Set<String> getSearchHistory(Integer userId) {
+       return redisHelper.getSearchHistoryList(userId);
+    }
+
+
+    @Override
+    public List<String> addSearchHistory(Integer userId, String search) {
+        redisHelper.addRedisRecentSearch(userId, search);
+        return null;
+    }
+
+    @Override
+    public void deleteSearchHistory(Integer userId) {
+        redisHelper.deleteSearchHistory(userId);
     }
 }
 

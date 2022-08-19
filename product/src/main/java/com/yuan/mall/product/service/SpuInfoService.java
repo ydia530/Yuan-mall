@@ -32,5 +32,7 @@ public interface SpuInfoService extends IService<SpuInfoEntity> {
     void up(Long spuId);
 
     SpuVo getSpuItemInfo(Long spuId) throws ExecutionException, InterruptedException;
+
+    SpuInfoEntity getSpuInfoBySkuId(Long skuId);
 }
 

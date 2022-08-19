@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Yuan Diao
@@ -25,10 +27,14 @@ public class SearchController {
 
     @GetMapping("/list")
     public R searchList(SearchParam searchParam, HttpServletRequest request){
-        System.out.println(request.getQueryString());
-        System.out.println(searchParam);
         GoodListVo result = searchService.searchVx(searchParam);
         return R.ok().put("data", result);
+    }
+
+    @GetMapping("hot_search")
+    public R searchHistory(){
+        Set<String> hot = searchService.getSearchHistory();
+        return R.ok().put("data", hot);
     }
 
 }

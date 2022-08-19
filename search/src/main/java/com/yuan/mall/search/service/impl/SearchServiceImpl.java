@@ -33,6 +33,7 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -42,7 +43,10 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.yuan.common.constant.SearchConstant;
 
 /**
  * <p>Title: MallServiceImpl</p>
@@ -58,6 +62,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private ProductFeignService productFeignService;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Override
     public SearchResult search(SearchParam Param) {
@@ -92,6 +99,11 @@ public class SearchServiceImpl implements SearchService {
             e.printStackTrace();
         }
         return result;
+    }
+
+    @Override
+    public Set<String> getSearchHistory() {
+        return redisTemplate.opsForZSet().reverseRangeByScore(SearchConstant.HOT_SEARCH, 0, 20);
     }
 
     private GoodListVo buildSearchResultVx(SearchResponse response, SearchParam param) {
@@ -155,9 +167,8 @@ public class SearchServiceImpl implements SearchService {
             boolQuery.must(QueryBuilders.matchQuery("skuTitle",Param.getKeyword()));
         }
         // 1.2 bool - filter Catalog3Id
-        if(!StringUtils.isEmpty(Param.getCatalog3Id())){
-            System.out.println("!");
-            boolQuery.filter(QueryBuilders.termQuery("catalogId", Param.getCatalog3Id()));
+        if(!StringUtils.isEmpty(Param.getCategory())){
+            boolQuery.filter(QueryBuilders.termQuery("catalogId", Param.getCategory()));
         }
         // 1.2 bool - brandId [集合]
         if(Param.getBrandId() != null && Param.getBrandId().size() > 0){

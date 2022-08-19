@@ -46,6 +46,19 @@ spring:
             filters:
               - RewritePath=/api/(?<segment>.*),/$\{segment}
 
+          - id: cart
+            uri: lb://cart
+            predicates:
+              - Path=/api/cart/**
+            filters:
+              - RewritePath=/api/(?<segment>.*),/$\{segment}
+
+          - id: order
+            uri: lb://order
+            predicates:
+              - Path=/api/order/**
+            filters:
+              - RewritePath=/api/(?<segment>.*),/$\{segment}
 
           - id: admin_route
             uri: lb://admin

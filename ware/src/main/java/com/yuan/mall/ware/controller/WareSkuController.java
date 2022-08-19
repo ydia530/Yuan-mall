@@ -4,8 +4,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.yuan.common.exception.BizCodeEnum;
+import com.yuan.common.exception.NotStockException;
 import com.yuan.mall.ware.vo.SkuHasStockVo;
 import com.yuan.mall.ware.entity.WareSkuEntity;
+import com.yuan.mall.ware.vo.WareSkuLockVo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,10 +27,24 @@ import com.yuan.common.utils.R;
  * @date 2022-01-08 14:52:55
  */
 @RestController
+@Slf4j
 @RequestMapping("ware/waresku")
 public class WareSkuController {
+
+
     @Autowired
     private WareSkuService wareSkuService;
+
+    @PostMapping("/lock/order")
+    public R orderLockStock(@RequestBody WareSkuLockVo vo){ // SkuId  count
+        try {
+            Boolean aBoolean = wareSkuService.orderLockStock(vo);
+            return R.ok();
+        } catch (NotStockException e) {
+            log.warn("\n" + e.getMessage());
+        }
+        return R.error(BizCodeEnum.NOT_STOCK_EXCEPTION.getCode(), BizCodeEnum.NOT_STOCK_EXCEPTION.getMessage());
+    }
 
     /**
      * 列表
@@ -44,7 +62,7 @@ public class WareSkuController {
      */
     @RequestMapping("/info/{id}")
     public R info(@PathVariable("id") Long id){
-		WareSkuEntity wareSku = wareSkuService.getById(id);
+		WareSkuEntity wareSku = wareSkuService.getBySkuId(id);
 
         return R.ok().put("wareSku", wareSku);
     }

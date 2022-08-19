@@ -1,0 +1,27 @@
+{
+  "groups": [
+    {
+      "name": "thread-pool",
+      "type": "com.yuan.mall.cart.config.ThreadPoolConfigProperties",
+      "sourceType": "com.yuan.mall.cart.config.ThreadPoolConfigProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "thread-pool.core-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.yuan.mall.cart.config.ThreadPoolConfigProperties"
+    },
+    {
+      "name": "thread-pool.keep-alive-time",
+      "type": "java.lang.Integer",
+      "sourceType": "com.yuan.mall.cart.config.ThreadPoolConfigProperties"
+    },
+    {
+      "name": "thread-pool.max-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.yuan.mall.cart.config.ThreadPoolConfigProperties"
+    }
+  ],
+  "hints": []
+}
